@@ -1,5 +1,21 @@
 """
-Basically the API is treated as a pub,
+ DO WHATEVER YOU WANT TO PUBLIC LICENSE
+                    Version 1, October 2019
+
+ Copyright (C) 2019 Sheng Zhuang <ShengZh9@gmail.com>
+
+ Everyone is permitted to copy and distribute verbatim or modified
+ copies of this license document, and changing it is allowed as long
+ as the name is changed.
+
+            DO WHATEVER YOU WANT TO PUBLIC LICENSE
+   TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
+
+  0. You just DO WHATEVER YOU WANT TO.
+"""
+"""
+This app is for talking to the cocktail db API, the free part.
+Basically using this API app is like managing a pub,
 
 with Inventories() of all categories, glasses, ingredients and alcoholic items,
 which just provide lists of general categories of all items;
@@ -13,7 +29,9 @@ which provide detail information of selected drink/drinks
 this API also provide Ingredients() for searching ingredients details
 """
 
+
 import requests
+from json.decoder import JSONDecodeError
 
 
 class Bar:
@@ -21,7 +39,7 @@ class Bar:
     Drinks ready to be served on the bar, presented by the bartender in detail
     example:
     --------
-    # searching the API first, then parsing the data back
+    # searching the API first, then parsing the retrieving data
     Bar().order_by_name("margarita").get_drinks_details()
     """
 
@@ -32,11 +50,14 @@ class Bar:
     def order_by_name(self, key):
         """
         :param  key: drink name, like "margarita"
+        if you not sure what to order, use Shelves() to get list of all drinks
         :return list of dict items, full recipe of the drinks
         """
-        path = "https://www.thecocktaildb.com/api/json/v1/1/search.php?s=" + key
-        self.data = requests.get(path).json()["drinks"]
-        # print(json.dumps(self.data, indent=4, sort_keys=True))
+        try:
+            path = "https://www.thecocktaildb.com/api/json/v1/1/search.php?s=" + key
+            self.data = requests.get(path).json()["drinks"]
+        except JSONDecodeError:
+            print("Sorry, no such drink in the API, or check the input again")
         return self
 
     def order_by_first_letter(self, key):
@@ -53,8 +74,12 @@ class Bar:
         :param  drink_id
         :return list with single dict item, full recipe of a drink
         """
-        path = "https://www.thecocktaildb.com/api/json/v1/1/lookup.php?i=" + str(drink_id)
-        self.data = requests.get(path).json()["drinks"]
+        try:
+            path = "https://www.thecocktaildb.com/api/json/v1/1/lookup.php?i=" + str(drink_id)
+            self.data = requests.get(path).json()["drinks"]
+        except JSONDecodeError:
+            print("""Sorry, no such drink in the API, the drink id must be 5 digits integer,
+                   or use other method to find a proper id.""")
         return self
 
     def order_a_random_drink(self):
@@ -105,6 +130,11 @@ class Bar:
 class Shelves:
     """
     All bottles on the selves, provide a general look of all drinks and ingredients
+
+    example:
+    --------
+    Shelves().filter_by_types("Non-Alcoholic").get_names()
+    you can use the return data to order a drink at the Bar().
     """
     def __init__(self):
         self.data = None
@@ -115,14 +145,19 @@ class Shelves:
         :param key: ingredient name
         :return: list of dict items, with id, name and thumbnail
         """
-        path = "https://www.thecocktaildb.com/api/json/v1/1/filter.php?i=" + key
-        self.data = requests.get(path).json()["drinks"]
+        try:
+            path = "https://www.thecocktaildb.com/api/json/v1/1/filter.php?i=" + key
+            self.data = requests.get(path).json()["drinks"]
+        except JSONDecodeError:
+            print("""Sorry, no such ingredient in the API, or check the input again, 
+                  or use other Ingredient() to find a proper ingredient.""")
+
         return self
 
     def filter_by_type(self, key):
         """
-        :param key: Alcoholic/Non-Alcoholic, Ordinary_Drink/Cocktail/or other drinks types,
-        check Inventory() for more drinks types
+        :param key: Alcoholic/Non-Alcoholic | by categories: Ordinary_Drink/Cocktail/or other drinks types,
+        check Inventory().get_categories for more drinks types
         :return: list of dict items, with id, name and thumbnail
         """
         if "alcohol" in key.lower():
@@ -130,8 +165,12 @@ class Shelves:
             self.data = requests.get(path).json()["drinks"]
             return self
         else:
-            path = "https://www.thecocktaildb.com/api/json/v1/1/filter.php?c=" + key
-            self.data = requests.get(path).json()["drinks"]
+            try:
+                path = "https://www.thecocktaildb.com/api/json/v1/1/filter.php?c=" + key
+                self.data = requests.get(path).json()["drinks"]
+            except JSONDecodeError:
+                print("""Sorry, no such drink type in the API, or check the input again, 
+                          or use other Inventories() to find a proper drink type.""")
             return self
 
     def filter_by_container(self, key):
@@ -139,8 +178,12 @@ class Shelves:
         :param key: container of the drink, you can check Inventory() for containers types
         :return:
         """
-        path = "https://www.thecocktaildb.com/api/json/v1/1/filter.php?g=" + key
-        self.data = requests.get(path).json()["drinks"]
+        try:
+            path = "https://www.thecocktaildb.com/api/json/v1/1/filter.php?g=" + key
+            self.data = requests.get(path).json()["drinks"]
+        except JSONDecodeError:
+            print("""Sorry, no such container in the API, or check the input again, 
+                      or use other Inventories() to find a proper container.""")
         return self
 
     def get_names(self):
@@ -155,32 +198,35 @@ class Inventories:
 
     example:
     --------
-    Inventory("a").data
+    Inventory().get_glass_types()
 
     """
-    def __init__(self, key):
-        if "c" in key.lower():
-            path = "https://www.thecocktaildb.com/api/json/v1/1/list.php?c=list"
-            print("searching inventory for all categories")
-            self.data = requests.get(path).json()["drinks"]
-            self.data = [d["strCategory"] for d in self.data]
-        elif "g" in key.lower():
-            path = "https://www.thecocktaildb.com/api/json/v1/1/list.php?g=list"
-            print("searching inventory for all glass")
-            self.data = requests.get(path).json()["drinks"]
-            self.data = [d["strGlass"] for d in self.data]
-        elif "i" in key.lower():
-            path = "https://www.thecocktaildb.com/api/json/v1/1/list.php?i=list"
-            print("searching inventory for all ingredients")
-            self.data = requests.get(path).json()["drinks"]
-            self.data = [d["strIngredient1"] for d in self.data]
-        elif "a" in key.lower():
-            path = "https://www.thecocktaildb.com/api/json/v1/1/list.php?a=list"
-            print("searching inventory for all alcoholic/other types")
-            self.data = requests.get(path).json()["drinks"]
-            self.data = [d["strAlcoholic"] for d in self.data if d["strAlcoholic"] is not None]
-        else:
-            print("No such item in the inventory")
+    def __init__(self):
+        self.data = None
+
+    def get_categories(self):
+        """
+        :return: list of categories names
+        """
+        path = "https://www.thecocktaildb.com/api/json/v1/1/list.php?c=list"
+        self.data = requests.get(path).json()["drinks"]
+        return [d["strCategory"] for d in self.data]
+
+    def get_container_types(self):
+        """
+        :return: list of container names
+        """
+        path = "https://www.thecocktaildb.com/api/json/v1/1/list.php?g=list"
+        self.data = requests.get(path).json()["drinks"]
+        return [d["strGlass"] for d in self.data]
+
+    def get_drink_types(self):
+        """
+        :return: list of drink types
+        """
+        path = "https://www.thecocktaildb.com/api/json/v1/1/list.php?a=list"
+        self.data = requests.get(path).json()["drinks"]
+        return [d["strAlcoholic"] for d in self.data if d["strAlcoholic"] is not None]
 
 
 class Ingredients:
@@ -194,21 +240,52 @@ class Ingredients:
     Ingredients("gin").data
     Ingredients("gin").get_recipes_list()
     """
-    def __init__(self, key, key_type="name"):
+    def __init__(self):
+        self.data = None
+        self.key = None
+        self.key_type = None
+
+    def get_all_ingredients(self):
+        """
+        :return: list of all ingredients
+        """
+        path = "https://www.thecocktaildb.com/api/json/v1/1/list.php?i=list"
+        self.data = requests.get(path).json()["drinks"]
+        return [d["strIngredient1"] for d in self.data]
+
+    def get_an_ingredient(self, key, key_type="name"):
         self.key = key
         self.key_type = key_type
         if self.key_type == "name":
-            path = "https://www.thecocktaildb.com/api/json/v1/1/search.php?i=" + key
-            self.data = requests.get(path).json()["ingredients"]
-            if len(self.data) == 1:
+            try:
+                path = "https://www.thecocktaildb.com/api/json/v1/1/search.php?i=" + key
+                self.data = requests.get(path).json()["ingredients"]
                 self.data = self.data[0]
+            except JSONDecodeError:
+                print("""Sorry, no such ingredient in the API, or check the input again, 
+                          or use get_all_ingredients to find a proper ingredient.""")
+
         elif self.key_type == "id":
-            path = "https://www.thecocktaildb.com/api/json/v1/1/search.php?iid=" + key
-            self.data = requests.get(path).json()["ingredients"]
-            if len(self.data) == 1:
+            try:
+                path = "https://www.thecocktaildb.com/api/json/v1/1/search.php?iid=" + str(key)
+                self.data = requests.get(path).json()["ingredients"]
                 self.data = self.data[0]
+            except JSONDecodeError:
+                print("""Sorry, no such ingredient in the API, or check the input again, 
+                              or use get_all_ingredients to find a proper ingredient.""")
+        else:
+            print("only name and id is support for checking ingredient.")
+            raise ValueError
+        return self
 
     def get_recipes_list(self):
+        """
+        this method should be used following get_an_ingredient()
+        :return: a list of drink recipes that include the exact ingredient
+        """
         if self.key_type == "name":
             path = "https://www.thecocktaildb.com/api/json/v1/1/filter.php?i=" + self.key
             return requests.get(path).json()["drinks"]
+        else:
+            print("this method should be used following get_an_ingredient().")
+            raise ValueError

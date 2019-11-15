@@ -1,18 +1,27 @@
-import api
+import unittest
+from api import Bar, Shelves, Inventories, Ingredients
 
-marg = api.Bar().order_by_name("margarita").get_drink_details()
+class TestApp(unittest.TestCase):
+    def test_bar_order_by_name(self):
+        result = Bar().order_by_name("margarita")
 
-d_list = api.Bar().order_by_first_letter("d").get_drink_names()
+        self.assertEqual()
 
-drink_id = api.Bar().order_by_drink_id(12322).get_drink_details()
 
-random_drink = api.Bar().order_a_random_drink().get_drink_details()
 
-all_categories = api.Inventories("c").data
 
-all_glass_types = api.Inventories("g").data
+if __name__ == '__main__':
+    unittest.main()
 
-all_ingredients = api.Inventories("i").data
 
-alcoholic = api.Inventories("a").data
 
+class TestSum(unittest.TestCase):
+
+    def test_sum(self):
+        self.assertEqual(sum([1, 2, 3]), 6, "Should be 6")
+
+    def test_sum_tuple(self):
+        self.assertEqual(sum((1, 2, 2)), 6, "Should be 6")
+
+if __name__ == '__main__':
+    unittest.main()

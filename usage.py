@@ -17,7 +17,8 @@ all_glass_types = api.Inventories().get_container_types()
 alcoholic = api.Inventories().get_drink_types()
 
 # Ingredients
+all_ingredients = api.Ingredients().get_all_ingredients()
+vodka = api.Ingredients().get_an_ingredient("vodka")
+about_vodka = vodka.data
+recipes_with_vodka = vodka.get_recipes_list()
 
-
-
-1+1 == 2
